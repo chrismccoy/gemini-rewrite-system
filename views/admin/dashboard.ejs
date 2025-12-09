@@ -1,0 +1,97 @@
+<%- include('../partials/adminHeader') %>
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <form method="GET" class="flex items-center space-x-3">
+            <span class="text-gray-700 font-medium">Filter:</span>
+            <select name="source_id" class="form-select block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border">
+                <option value="">All Sources</option>
+                <% sources.forEach(src => { %>
+                    <option value="<%= src.id %>" <%= currentFilter == src.id ? 'selected' : '' %>>
+                        <%= src.title %>
+                    </option>
+                <% }) %>
+            </select>
+            <button class="bg-gray-800 text-white px-4 py-2 rounded text-sm hover:bg-gray-700">Apply</button>
+            <% if(currentFilter) { %>
+                <a href="/admin/dashboard" class="text-sm text-red-500 hover:underline">Clear</a>
+            <% } %>
+        </form>
+    </div>
+
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Article</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">AI Action</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            <% if(!items.length) { %>
+                <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No feed items found.</td></tr>
+            <% } %>
+            
+            <% items.forEach(item => { %>
+                <tr class="<%= item.isImported ? 'bg-green-50' : '' %>">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900"><%= item.title %></div>
+                        <a href="<%= item.permalink %>" target="_blank" class="text-xs text-blue-500 hover:text-blue-700">View Original ↗</a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.source %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <%= new Date(item.date * 1000).toLocaleDateString() %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium action-col">
+                        <% if(item.isImported) { %>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Imported
+                            </span>
+                        <% } else { %>
+                            <button class="rewrite-btn text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs transition"
+                                data-title="<%= item.title %>"
+                                data-link="<%= item.permalink %>"
+                                data-source="<%= item.source %>"
+                                data-content="<%= item.content %>">
+                                ✨ Rewrite
+                            </button>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+$(document).ready(function(){
+    $('.rewrite-btn').click(function(){
+        const btn = $(this);
+        const cell = btn.closest('.action-col');
+        const row = btn.closest('tr');
+        
+        btn.prop('disabled', true).text('Thinking...').addClass('opacity-75');
+
+        $.ajax({
+            url: '/api/rewrite',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(btn.data()),
+            success: function(res) {
+                if(res.success) {
+                    btn.remove();
+                    cell.html('<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Drafted ✔</span>');
+                    row.addClass('bg-green-50');
+                }
+            },
+            error: function(err) {
+                alert('Error: ' + (err.responseJSON?.message || 'Failed'));
+                btn.prop('disabled', false).text('✨ Rewrite').removeClass('opacity-75');
+            }
+        });
+    });
+});
+</script>
+
+<%- include('../partials/adminFooter') %>

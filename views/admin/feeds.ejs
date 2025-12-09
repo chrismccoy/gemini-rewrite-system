@@ -1,0 +1,42 @@
+<%- include('../partials/adminHeader') %>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Add RSS Feed</h3>
+        <form action="/admin/feeds" method="POST">
+            <div>
+                <label for="url" class="block text-sm font-medium text-gray-700">Feed URL</label>
+                <div class="mt-1">
+                    <input type="url" name="url" id="url" required 
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md border p-2" 
+                        placeholder="https://site.com/feed.xml">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
+                    Add Source
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Active Feeds</h3>
+        <ul class="divide-y divide-gray-200">
+            <% if(!feeds.length) { %>
+                <li class="py-4 text-gray-500 italic text-sm">No feeds configured.</li>
+            <% } %>
+            <% feeds.forEach(feed => { %>
+                <li class="py-4 flex justify-between items-center">
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-medium text-gray-900 truncate"><%= feed.title %></p>
+                        <p class="text-sm text-gray-500 truncate"><%= feed.url %></p>
+                    </div>
+                    <a href="/admin/feeds/delete/<%= feed.id %>" class="ml-4 text-sm font-medium text-red-600 hover:text-red-500">Delete</a>
+                </li>
+            <% }) %>
+        </ul>
+    </div>
+</div>
+
+<%- include('../partials/adminFooter') %>
